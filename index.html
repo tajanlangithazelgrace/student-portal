@@ -1,116 +1,526 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A classroom demo for recording fictional barangay incident reports.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A one-page barangay peace and order incident blotter tracker prototype using browser localStorage.">
   <title>Barangay Peace &amp; Order | Blotter Tracker</title>
   <style>
-    :root{font-family:Arial, sans-serif;color:#17233b;background:#f4f7fb;--line:#e2e8f0;--blue:#2459d3}
-    *{box-sizing:border-box}body{margin:0}.topbar{padding:22px max(20px,calc((100vw - 1200px)/2));background:#17365c;color:#fff}
-    .topbar h1{margin:0;font-size:25px}.topbar p{margin:6px 0 0;color:#d7e4f5}.page{width:min(1200px,calc(100% - 32px));margin:24px auto}
-    .notice{padding:14px 16px;background:#fff7df;border:1px solid #f0d69a;border-radius:12px;margin-bottom:18px;line-height:1.5}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.stat,.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
-    .stat span{display:block;color:#68758a;font-size:12px}.stat strong{display:block;font-size:26px;margin-top:6px}.layout{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:18px;align-items:start}
-    .panel h2{font-size:17px;margin:0 0 14px}.field{margin-bottom:14px}.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px}
-    input,select,textarea{width:100%;padding:10px;border:1px solid #ccd6e3;border-radius:8px;font:inherit}textarea{min-height:100px;resize:vertical}
-    button{border:0;border-radius:8px;padding:10px 14px;background:var(--blue);color:white;font-weight:bold;cursor:pointer}
-    .toolbar{display:grid;grid-template-columns:1fr 160px;gap:8px;margin-bottom:12px}.record{padding:14px 0;border-top:1px solid var(--line)}
-    .record h3{margin:0 0 5px;font-size:15px}.muted{color:#68758a;font-size:12px}.record p{font-size:13px;line-height:1.5}
-    @media(max-width:800px){.layout{grid-template-columns:1fr}}@media(max-width:520px){.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:21px}.toolbar{grid-template-columns:1fr}}
+    :root {
+      color-scheme: light;
+      --ink: #17233b;
+      --muted: #66738a;
+      --line: #e4eaf2;
+      --surface: #ffffff;
+      --canvas: #f4f7fb;
+      --navy: #142b4a;
+      --blue: #2459d3;
+      --blue-soft: #edf3ff;
+      --green: #147a51;
+      --green-soft: #eaf7f0;
+      --amber: #95610b;
+      --amber-soft: #fff6df;
+      --red: #b33d42;
+      --red-soft: #fff0f0;
+      --shadow: 0 16px 40px rgba(28, 48, 78, .07);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      color: #fff;
+      background: linear-gradient(115deg, #102746, #1b416d);
+      padding: 22px max(22px, calc((100vw - 1320px) / 2));
+    }
+    .topbar-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      width: 44px; height: 44px; display: grid; place-items: center;
+      border: 1px solid rgba(255,255,255,.25); border-radius: 13px;
+      background: rgba(255,255,255,.1); font-size: 22px;
+    }
+    .eyebrow { margin: 0 0 3px; color: #b9cbea; font-size: 11px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(20px, 3vw, 27px); letter-spacing: -.035em; }
+    .subhead { margin: 5px 0 0; color: #d2def0; font-size: 13px; }
+    .demo-tag {
+      padding: 8px 12px; border-radius: 999px; color: #ffe6a4;
+      border: 1px solid rgba(255,230,164,.35); background: rgba(255,230,164,.1);
+      font-size: 11px; font-weight: 800; letter-spacing: .08em; white-space: nowrap;
+    }
+    .page { width: min(1320px, calc(100% - 40px)); margin: 26px auto 48px; }
+    .warning {
+      display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px;
+      margin-bottom: 20px; border: 1px solid #f0d69a; border-radius: 13px;
+      background: #fff9e9; color: #75501b; font-size: 13px; line-height: 1.5;
+    }
+    .warning strong { display: block; margin-bottom: 2px; }
+    .warning-icon { font-size: 19px; line-height: 1.2; }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 17px 19px; border: 1px solid var(--line); border-radius: 15px;
+      background: var(--surface); box-shadow: 0 5px 18px rgba(28,48,78,.03);
+    }
+    .stat-label { margin: 0 0 5px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .stat-value { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.04em; }
+    .stat-icon { display: grid; place-items: center; width: 41px; height: 41px; border-radius: 12px; font-size: 19px; }
+    .stat.received .stat-icon { color: var(--blue); background: var(--blue-soft); }
+    .stat.review .stat-icon { color: var(--amber); background: var(--amber-soft); }
+    .stat.resolved .stat-icon { color: var(--green); background: var(--green-soft); }
+    .layout { display: grid; grid-template-columns: minmax(300px, 370px) minmax(0, 1fr); align-items: start; gap: 20px; }
+    .panel { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+    .panel-head { padding: 19px 21px 15px; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 16px; letter-spacing: -.02em; }
+    .panel-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .form-body { padding: 18px 21px 21px; }
+    .field { margin-bottom: 15px; }
+    .field label { display: block; margin-bottom: 7px; color: #34445c; font-size: 12px; font-weight: 750; }
+    .required { color: var(--red); }
+    .field input, .field select, .field textarea, .toolbar input, .toolbar select {
+      width: 100%; border: 1px solid #d7e0eb; border-radius: 9px; outline: none;
+      color: var(--ink); background: #fff; transition: border-color .15s, box-shadow .15s;
+    }
+    .field input, .field select { min-height: 42px; padding: 9px 11px; }
+    .field textarea { min-height: 102px; resize: vertical; padding: 11px; line-height: 1.5; }
+    .field input:focus, .field select:focus, .field textarea:focus, .toolbar input:focus, .toolbar select:focus {
+      border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36,89,211,.11);
+    }
+    .hint { margin: 6px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .primary-btn, .secondary-btn, .danger-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 41px; padding: 10px 14px; border: 0; border-radius: 9px; font-size: 12px; font-weight: 800;
+    }
+    .primary-btn { width: 100%; color: #fff; background: var(--blue); box-shadow: 0 5px 12px rgba(36,89,211,.18); }
+    .primary-btn:hover { background: #194bbd; }
+    .secondary-btn { color: #29415f; background: #edf2f8; }
+    .secondary-btn:hover { background: #e1e9f3; }
+    .danger-btn { color: var(--red); background: var(--red-soft); }
+    .toolbar {
+      display: grid; grid-template-columns: minmax(160px, 1fr) 180px auto;
+      gap: 9px; padding: 16px 20px; border-bottom: 1px solid var(--line);
+    }
+    .toolbar input, .toolbar select { min-height: 40px; padding: 8px 10px; font-size: 12px; }
+    .records-list { padding: 5px 20px 18px; }
+    .record {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px;
+      padding: 17px 0; border-bottom: 1px solid #edf1f6;
+    }
+    .record:last-child { border-bottom: 0; }
+    .record-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 7px; }
+    .record-id { color: var(--blue); font-size: 11px; font-weight: 850; letter-spacing: .04em; }
+    .status {
+      display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 8px;
+      font-size: 10px; font-weight: 850; white-space: nowrap;
+    }
+    .status.received { color: #2454b9; background: var(--blue-soft); }
+    .status.under-review { color: var(--amber); background: var(--amber-soft); }
+    .status.resolved { color: var(--green); background: var(--green-soft); }
+    .record h3 { margin: 0 0 5px; font-size: 14px; }
+    .record-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--muted); font-size: 11px; }
+    .record-description { margin: 9px 0 0; color: #53627a; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+    .record-actions { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 7px; }
+    .record-actions select { max-width: 142px; padding: 7px 8px; border: 1px solid #d7e0eb; border-radius: 8px; color: #34445c; background: #fff; font-size: 10px; }
+    .delete-btn { padding: 4px 2px; border: 0; color: #a34b50; background: transparent; font-size: 10px; font-weight: 750; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .empty { padding: 42px 15px; text-align: center; color: var(--muted); }
+    .empty-icon { margin-bottom: 8px; font-size: 28px; }
+    .empty strong { display: block; margin-bottom: 5px; color: #34445c; font-size: 13px; }
+    .empty p { margin: 0; font-size: 12px; }
+    .panel-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 5; max-width: min(360px, calc(100% - 44px)); padding: 12px 16px; border-radius: 10px; color: white; background: #183b66; box-shadow: var(--shadow); font-size: 12px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    footer { margin-top: 20px; color: #8591a4; text-align: center; font-size: 10px; }
+    @media (max-width: 880px) {
+      .layout { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: 1fr 160px; }
+      .toolbar .secondary-btn { grid-column: 1 / -1; }
+    }
+    @media (max-width: 560px) {
+      .topbar { padding: 18px 17px; }
+      .topbar-inner { align-items: flex-start; }
+      .demo-tag { max-width: 102px; white-space: normal; text-align: center; line-height: 1.4; }
+      .page { width: calc(100% - 26px); margin-top: 16px; }
+      .stats { gap: 8px; }
+      .stat { padding: 12px 10px; align-items: flex-start; }
+      .stat-value { font-size: 23px; }
+      .stat-icon { width: 31px; height: 31px; font-size: 15px; }
+      .stat-label { font-size: 10px; }
+      .toolbar { grid-template-columns: 1fr; padding: 13px; }
+      .toolbar .secondary-btn { grid-column: auto; }
+      .panel-head, .form-body { padding-left: 15px; padding-right: 15px; }
+      .records-list { padding-left: 14px; padding-right: 14px; }
+      .record { grid-template-columns: 1fr; }
+      .record-actions { flex-direction: row; justify-content: flex-start; align-items: center; }
+      .panel-foot { padding-left: 14px; padding-right: 14px; align-items: flex-start; flex-direction: column; }
+    }
   </style>
 </head>
 <body>
-  <header class="topbar"><h1>Barangay Peace &amp; Order</h1><p>Incident Blotter Tracker · Lab 1 classroom prototype</p></header>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">🛡️</div>
+        <div>
+          <p class="eyebrow">Community web app · Lab 1</p>
+          <h1>Barangay Peace &amp; Order</h1>
+          <p class="subhead">Incident Blotter Tracker</p>
+        </div>
+      </div>
+      <div class="demo-tag">DEMO · SAMPLE DATA ONLY</div>
+    </div>
+  </header>
+
   <main class="page">
-    <div class="notice"><strong>Sample data only.</strong> Do not enter real names, contact details, exact addresses, or information about actual incidents. This classroom demo is not an official record system.</div>
-    <section class="stats" aria-label="Report summary">
-      <article class="stat"><span>Received</span><strong id="receivedCount">0</strong></article>
-      <article class="stat"><span>Under review</span><strong id="reviewCount">0</strong></article>
-      <article class="stat"><span>Resolved</span><strong id="resolvedCount">0</strong></article>
+    <aside class="warning" role="note">
+      <div class="warning-icon" aria-hidden="true">⚠️</div>
+      <div>
+        <strong>Classroom prototype — do not enter real personal or incident information.</strong>
+        This demo stores data in this browser only. It has no login, server, encryption, or secure access controls. Use fictional/sample details only.
+      </div>
+    </aside>
+
+    <section class="stats" aria-label="Blotter report summary">
+      <article class="stat received">
+        <div><p class="stat-label">Received</p><p class="stat-value" id="receivedCount">0</p></div>
+        <div class="stat-icon" aria-hidden="true">📥</div>
+      </article>
+      <article class="stat review">
+        <div><p class="stat-label">Under review</p><p class="stat-value" id="reviewCount">0</p></div>
+        <div class="stat-icon" aria-hidden="true">🔎</div>
+      </article>
+      <article class="stat resolved">
+        <div><p class="stat-label">Resolved</p><p class="stat-value" id="resolvedCount">0</p></div>
+        <div class="stat-icon" aria-hidden="true">✓</div>
+      </article>
     </section>
+
     <div class="layout">
-      <section class="panel" aria-labelledby="report-heading">
-        <h2 id="report-heading">Record an incident</h2>
-        <form id="reportForm">
-          <div class="field"><label for="reportDate">Date reported</label><input id="reportDate" type="date" required></div>
-          <div class="field"><label for="category">Incident category</label><select id="category" required><option value="">Choose a category</option><option>Noise concern</option><option>Neighborhood dispute</option><option>Property concern</option><option>Public disturbance</option><option>Safety concern</option><option>Other community concern</option></select></div>
-          <div class="field"><label for="location">General location / purok</label><input id="location" maxlength="80" placeholder="e.g. Purok 2 (fictional example)" required></div>
-          <div class="field"><label for="summary">Brief incident summary</label><textarea id="summary" maxlength="300" required></textarea><p class="muted"><span id="charCount">0</span>/300 characters</p></div>
-          <button type="submit">Save sample report</button>
+      <section class="panel" aria-labelledby="formTitle">
+        <div class="panel-head">
+          <h2 id="formTitle">＋ Record an incident</h2>
+          <p>Enter a fictional sample report to demonstrate the intake process.</p>
+        </div>
+        <form id="reportForm" class="form-body">
+          <div class="field">
+            <label for="reportDate">Date reported <span class="required">*</span></label>
+            <input id="reportDate" name="reportDate" type="date" required>
+          </div>
+          <div class="field">
+            <label for="category">Incident category <span class="required">*</span></label>
+            <select id="category" name="category" required>
+              <option value="">Select a category</option>
+              <option>Noise concern</option>
+              <option>Neighborhood dispute</option>
+              <option>Property concern</option>
+              <option>Public disturbance</option>
+              <option>Safety concern</option>
+              <option>Other community concern</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="location">General location / purok <span class="required">*</span></label>
+            <input id="location" name="location" type="text" maxlength="80" placeholder="e.g. Purok 2 (fictional example)" required>
+            <p class="hint">Use a general area only. Do not enter a house number or exact private address.</p>
+          </div>
+          <div class="field">
+            <label for="summary">Brief incident summary <span class="required">*</span></label>
+            <textarea id="summary" name="summary" maxlength="300" placeholder="Write a short, neutral description using fictional details only." required></textarea>
+            <p class="hint"><span id="charCount">0</span>/300 characters. Avoid names, contact details, accusations, and sensitive information.</p>
+          </div>
+          <button class="primary-btn" type="submit">＋ Save sample report</button>
         </form>
       </section>
-      <section class="panel" aria-labelledby="records-heading">
-        <h2 id="records-heading">Blotter records</h2>
-        <div class="toolbar"><input id="searchInput" type="search" placeholder="Search reports"><select id="statusFilter"><option value="all">All statuses</option><option>Received</option><option>Under Review</option><option>Resolved</option></select></div>
-        <div id="recordsList"><p class="muted">No reports yet.</p></div>
+
+      <section class="panel" aria-labelledby="recordsTitle">
+        <div class="panel-head">
+          <h2 id="recordsTitle">Blotter records</h2>
+          <p>Search reports and update their follow-up status.</p>
+        </div>
+        <div class="toolbar">
+          <input id="searchInput" type="search" placeholder="Search ID, category, location..." aria-label="Search reports">
+          <select id="statusFilter" aria-label="Filter by status">
+            <option value="all">All statuses</option>
+            <option value="Received">Received</option>
+            <option value="Under Review">Under review</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+          <button id="loadSamples" class="secondary-btn" type="button">↻ Reload sample data</button>
+        </div>
+        <div id="recordsList" class="records-list" aria-live="polite"></div>
+        <div class="panel-foot">
+          <span id="recordCount">0 reports</span>
+          <button id="clearRecords" class="danger-btn" type="button">Clear demo records</button>
+        </div>
       </section>
     </div>
+    <footer>Barangay Peace &amp; Order Blotter Tracker · Lab prototype v0.1.0 · Data remains in this browser</footer>
   </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
   <script>
     "use strict";
-    const reports = [];
+
+    const STORAGE_KEY = "barangayPeaceOrderBlotter_demo_v1";
+    const STATUSES = ["Received", "Under Review", "Resolved"];
+    const SAMPLE_REPORTS = [
+      {
+        id: "BPO-DEMO-001", reportDate: "2026-11-20", category: "Noise concern",
+        location: "Purok 2 (sample area)", summary: "A fictional resident reports repeated loud music late in the evening near the community court.",
+        status: "Under Review", sample: true
+      },
+      {
+        id: "BPO-DEMO-002", reportDate: "2026-11-22", category: "Neighborhood dispute",
+        location: "Purok 4 (sample area)", summary: "A simulated disagreement between neighbors was referred to the barangay desk for follow-up.",
+        status: "Received", sample: true
+      },
+      {
+        id: "BPO-DEMO-003", reportDate: "2026-11-18", category: "Safety concern",
+        location: "Near the covered court (sample area)", summary: "A fictional report about a damaged pathway light was checked and marked complete for this demo.",
+        status: "Resolved", sample: true
+      }
+    ];
+
     const form = document.getElementById("reportForm");
+    const reportDate = document.getElementById("reportDate");
+    const summaryInput = document.getElementById("summary");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
     const recordsList = document.getElementById("recordsList");
-    let nextReportNumber = 1;
+    const toast = document.getElementById("toast");
+    let reports = loadReports();
+    let toastTimeout;
+
+    function localDateString() {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function loadReports() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved === null) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(SAMPLE_REPORTS));
+          return [...SAMPLE_REPORTS];
+        }
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed.filter(isValidReport) : [];
+      } catch (error) {
+        console.error("Could not load demo reports:", error);
+        return [];
+      }
+    }
+
+    function isValidReport(item) {
+      return item && typeof item.id === "string" && typeof item.category === "string" &&
+        typeof item.location === "string" && typeof item.summary === "string" &&
+        STATUSES.includes(item.status);
+    }
+
+    function saveReports() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+        return true;
+      } catch (error) {
+        console.error("Could not save demo reports:", error);
+        showToast("Could not save. Browser storage may be unavailable or full.");
+        return false;
+      }
+    }
+
+    function makeReportId() {
+      const nextNumber = reports.reduce((largest, report) => {
+        const match = report.id.match(/^BPO-(\d{4})-(\d{4})$/);
+        return match ? Math.max(largest, Number(match[2])) : largest;
+      }, 0) + 1;
+      return `BPO-${new Date().getFullYear()}-${String(nextNumber).padStart(4, "0")}`;
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(toastTimeout);
+      toastTimeout = window.setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    function safeText(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    function statusClass(status) {
+      return status.toLowerCase().replaceAll(" ", "-");
+    }
+
+    function formatDate(value) {
+      if (!value) return "Date not set";
+      const parsed = new Date(`${value}T00:00:00`);
+      return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString(undefined, {
+        year: "numeric", month: "short", day: "numeric"
+      });
+    }
+
+    function updateSummary() {
+      document.getElementById("receivedCount").textContent = reports.filter(item => item.status === "Received").length;
+      document.getElementById("reviewCount").textContent = reports.filter(item => item.status === "Under Review").length;
+      document.getElementById("resolvedCount").textContent = reports.filter(item => item.status === "Resolved").length;
+    }
 
     function renderReports() {
-      if (reports.length === 0) {
-        recordsList.innerHTML = '<p class="muted">No reports yet. Add a fictional sample report.</p>';
+      const query = searchInput.value.trim().toLowerCase();
+      const selectedStatus = statusFilter.value;
+      const filtered = reports.filter(report => {
+        const searchable = [report.id, report.category, report.location, report.summary].join(" ").toLowerCase();
+        return searchable.includes(query) && (selectedStatus === "all" || report.status === selectedStatus);
+      }).sort((a, b) => b.reportDate.localeCompare(a.reportDate));
+
+      updateSummary();
+      document.getElementById("recordCount").textContent = `${filtered.length} of ${reports.length} report${reports.length === 1 ? "" : "s"}`;
+
+      if (filtered.length === 0) {
+        recordsList.innerHTML = `<div class="empty"><div class="empty-icon">📂</div><strong>No matching reports</strong><p>Try another search or add a fictional sample report.</p></div>`;
         return;
       }
-      updateSummary();
-      const query = document.getElementById("searchInput").value.trim().toLowerCase();
-      const selectedStatus = document.getElementById("statusFilter").value;
-      const filteredReports = reports.filter(report => {
-        const searchableText = [report.id, report.category, report.location, report.summary].join(" ").toLowerCase();
-        return searchableText.includes(query) && (selectedStatus === "all" || report.status === selectedStatus);
-      });
-      recordsList.innerHTML = filteredReports.map(report => `
-        <article class="record">
-          <h3>${report.id} · ${report.category}</h3>
-          <div class="muted">${report.reportDate} · ${report.location}</div>
-          <p>${report.summary}</p>
-          <label class="muted" for="status-${report.id}">Follow-up status</label>
-          <select id="status-${report.id}" class="status-select" data-id="${report.id}">
-            ${["Received", "Under Review", "Resolved"].map(status => `<option ${report.status === status ? "selected" : ""}>${status}</option>`).join("")}
-          </select>
+
+      recordsList.innerHTML = filtered.map(report => `
+        <article class="record" data-id="${safeText(report.id)}">
+          <div>
+            <div class="record-top">
+              <span class="record-id">${safeText(report.id)}</span>
+              <span class="status ${statusClass(report.status)}">${safeText(report.status)}</span>
+            </div>
+            <h3>${safeText(report.category)}</h3>
+            <div class="record-meta">
+              <span>📅 ${safeText(formatDate(report.reportDate))}</span>
+              <span>📍 ${safeText(report.location)}</span>
+            </div>
+            <p class="record-description">${safeText(report.summary)}</p>
+          </div>
+          <div class="record-actions">
+            <label class="sr-only" for="status-${safeText(report.id)}">Update status for ${safeText(report.id)}</label>
+            <select id="status-${safeText(report.id)}" class="status-select" data-id="${safeText(report.id)}" aria-label="Update status for ${safeText(report.id)}">
+              ${STATUSES.map(status => `<option value="${status}" ${report.status === status ? "selected" : ""}>${status}</option>`).join("")}
+            </select>
+            <button class="delete-btn" type="button" data-delete="${safeText(report.id)}">Delete demo</button>
+          </div>
         </article>
       `).join("");
     }
 
-    function updateSummary() {
-      document.getElementById("receivedCount").textContent = reports.filter(report => report.status === "Received").length;
-      document.getElementById("reviewCount").textContent = reports.filter(report => report.status === "Under Review").length;
-      document.getElementById("resolvedCount").textContent = reports.filter(report => report.status === "Resolved").length;
-    }
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const newReport = {
+        id: makeReportId(),
+        reportDate: reportDate.value,
+        category: document.getElementById("category").value,
+        location: document.getElementById("location").value.trim(),
+        summary: summaryInput.value.trim(),
+        status: "Received",
+        sample: false
+      };
+
+      if (!newReport.location || !newReport.summary) {
+        showToast("Please complete all required fields.");
+        return;
+      }
+
+      reports.unshift(newReport);
+      if (saveReports()) {
+        form.reset();
+        reportDate.value = localDateString();
+        document.getElementById("charCount").textContent = "0";
+        searchInput.value = "";
+        statusFilter.value = "all";
+        renderReports();
+        showToast(`Sample report ${newReport.id} saved in this browser.`);
+      } else {
+        reports.shift();
+      }
+    });
 
     recordsList.addEventListener("change", event => {
       if (!event.target.matches(".status-select")) return;
       const report = reports.find(item => item.id === event.target.dataset.id);
-      if (report) {
-        report.status = event.target.value;
+      if (!report) return;
+      const previousStatus = report.status;
+      report.status = event.target.value;
+      if (saveReports()) {
+        renderReports();
+        showToast(`${report.id}: ${previousStatus} → ${report.status}`);
+      } else {
+        report.status = previousStatus;
         renderReports();
       }
     });
 
-    document.getElementById("searchInput").addEventListener("input", renderReports);
-    document.getElementById("statusFilter").addEventListener("change", renderReports);
-
-    form.addEventListener("submit", event => {
-      event.preventDefault();
-      if (!form.reportValidity()) return;
-      const report = {
-        id: `BPO-DEMO-${String(nextReportNumber++).padStart(3, "0")}`,
-        reportDate: document.getElementById("reportDate").value,
-        category: document.getElementById("category").value,
-        location: document.getElementById("location").value.trim(),
-        summary: document.getElementById("summary").value.trim(),
-        status: "Received"
-      };
-      reports.unshift(report);
-      form.reset();
-      renderReports();
+    recordsList.addEventListener("click", event => {
+      const deleteButton = event.target.closest("[data-delete]");
+      if (!deleteButton) return;
+      const reportId = deleteButton.dataset.delete;
+      if (!window.confirm(`Delete demo report ${reportId}?`)) return;
+      const previousReports = reports;
+      reports = reports.filter(item => item.id !== reportId);
+      if (saveReports()) {
+        renderReports();
+        showToast("Demo report deleted.");
+      } else {
+        reports = previousReports;
+        renderReports();
+      }
     });
+
+    searchInput.addEventListener("input", renderReports);
+    statusFilter.addEventListener("change", renderReports);
+    summaryInput.addEventListener("input", () => {
+      document.getElementById("charCount").textContent = summaryInput.value.length;
+    });
+
+    document.getElementById("loadSamples").addEventListener("click", () => {
+      if (reports.length && !window.confirm("Replace the current demo records with the original fictional sample records?")) return;
+      reports = [...SAMPLE_REPORTS];
+      if (saveReports()) {
+        searchInput.value = "";
+        statusFilter.value = "all";
+        renderReports();
+        showToast("Fictional sample records reloaded.");
+      }
+    });
+
+    document.getElementById("clearRecords").addEventListener("click", () => {
+      if (!reports.length) {
+        showToast("There are no demo records to clear.");
+        return;
+      }
+      if (!window.confirm("Clear every report saved by this demo in this browser?")) return;
+      const previousReports = reports;
+      reports = [];
+      if (saveReports()) {
+        renderReports();
+        showToast("All demo records cleared from this browser.");
+      } else {
+        reports = previousReports;
+        renderReports();
+      }
+    });
+
+    reportDate.value = localDateString();
+    renderReports();
   </script>
 </body>
 </html>
