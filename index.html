@@ -1,37 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A classroom demo for recording fictional barangay incident reports.">
   <title>Barangay Peace &amp; Order | Blotter Tracker</title>
+  <style>
+    :root{font-family:Arial, sans-serif;color:#17233b;background:#f4f7fb;--line:#e2e8f0;--blue:#2459d3}
+    *{box-sizing:border-box}body{margin:0}.topbar{padding:22px max(20px,calc((100vw - 1200px)/2));background:#17365c;color:#fff}
+    .topbar h1{margin:0;font-size:25px}.topbar p{margin:6px 0 0;color:#d7e4f5}.page{width:min(1200px,calc(100% - 32px));margin:24px auto}
+    .notice{padding:14px 16px;background:#fff7df;border:1px solid #f0d69a;border-radius:12px;margin-bottom:18px;line-height:1.5}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.stat,.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+    .stat span{display:block;color:#68758a;font-size:12px}.stat strong{display:block;font-size:26px;margin-top:6px}.layout{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:18px;align-items:start}
+    .panel h2{font-size:17px;margin:0 0 14px}.field{margin-bottom:14px}.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #ccd6e3;border-radius:8px;font:inherit}textarea{min-height:100px;resize:vertical}
+    button{border:0;border-radius:8px;padding:10px 14px;background:var(--blue);color:white;font-weight:bold;cursor:pointer}
+    .toolbar{display:grid;grid-template-columns:1fr 160px;gap:8px;margin-bottom:12px}.record{padding:14px 0;border-top:1px solid var(--line)}
+    .record h3{margin:0 0 5px;font-size:15px}.muted{color:#68758a;font-size:12px}.record p{font-size:13px;line-height:1.5}
+    @media(max-width:800px){.layout{grid-template-columns:1fr}}@media(max-width:520px){.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:21px}.toolbar{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Barangay Peace &amp; Order</h1>
-    <p>Incident Blotter Tracker</p>
-  </header>
-  <main>
-    <section aria-labelledby="report-heading">
-      <h2 id="report-heading">Record an incident</h2>
-      <form id="reportForm">
-        <p><label for="reportDate">Date reported</label><br><input id="reportDate" type="date" required></p>
-        <p><label for="category">Incident category</label><br>
-          <select id="category" required>
-            <option value="">Choose a category</option>
-            <option>Noise concern</option><option>Neighborhood dispute</option>
-            <option>Property concern</option><option>Public disturbance</option>
-            <option>Safety concern</option><option>Other community concern</option>
-          </select>
-        </p>
-        <p><label for="location">General location / purok</label><br><input id="location" maxlength="80" required></p>
-        <p><label for="summary">Brief incident summary</label><br><textarea id="summary" maxlength="300" required></textarea></p>
-        <button type="submit">Save sample report</button>
-      </form>
+  <header class="topbar"><h1>Barangay Peace &amp; Order</h1><p>Incident Blotter Tracker · Lab 1 classroom prototype</p></header>
+  <main class="page">
+    <div class="notice"><strong>Sample data only.</strong> Do not enter real names, contact details, exact addresses, or information about actual incidents. This classroom demo is not an official record system.</div>
+    <section class="stats" aria-label="Report summary">
+      <article class="stat"><span>Received</span><strong id="receivedCount">0</strong></article>
+      <article class="stat"><span>Under review</span><strong id="reviewCount">0</strong></article>
+      <article class="stat"><span>Resolved</span><strong id="resolvedCount">0</strong></article>
     </section>
-    <section aria-labelledby="records-heading">
-      <h2 id="records-heading">Blotter records</h2>
-      <div id="recordsList"><p>No reports yet.</p></div>
-    </section>
+    <div class="layout">
+      <section class="panel" aria-labelledby="report-heading">
+        <h2 id="report-heading">Record an incident</h2>
+        <form id="reportForm">
+          <div class="field"><label for="reportDate">Date reported</label><input id="reportDate" type="date" required></div>
+          <div class="field"><label for="category">Incident category</label><select id="category" required><option value="">Choose a category</option><option>Noise concern</option><option>Neighborhood dispute</option><option>Property concern</option><option>Public disturbance</option><option>Safety concern</option><option>Other community concern</option></select></div>
+          <div class="field"><label for="location">General location / purok</label><input id="location" maxlength="80" placeholder="e.g. Purok 2 (fictional example)" required></div>
+          <div class="field"><label for="summary">Brief incident summary</label><textarea id="summary" maxlength="300" required></textarea><p class="muted"><span id="charCount">0</span>/300 characters</p></div>
+          <button type="submit">Save sample report</button>
+        </form>
+      </section>
+      <section class="panel" aria-labelledby="records-heading">
+        <h2 id="records-heading">Blotter records</h2>
+        <div class="toolbar"><input id="searchInput" type="search" placeholder="Search reports"><select id="statusFilter"><option value="all">All statuses</option><option>Received</option><option>Under Review</option><option>Resolved</option></select></div>
+        <div id="recordsList"><p class="muted">No reports yet.</p></div>
+      </section>
+    </div>
   </main>
 </body>
 </html>
