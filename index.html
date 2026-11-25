@@ -58,14 +58,34 @@
         recordsList.innerHTML = '<p class="muted">No reports yet. Add a fictional sample report.</p>';
         return;
       }
+      updateSummary();
       recordsList.innerHTML = reports.map(report => `
         <article class="record">
           <h3>${report.id} · ${report.category}</h3>
           <div class="muted">${report.reportDate} · ${report.location}</div>
           <p>${report.summary}</p>
+          <label class="muted" for="status-${report.id}">Follow-up status</label>
+          <select id="status-${report.id}" class="status-select" data-id="${report.id}">
+            ${["Received", "Under Review", "Resolved"].map(status => `<option ${report.status === status ? "selected" : ""}>${status}</option>`).join("")}
+          </select>
         </article>
       `).join("");
     }
+
+    function updateSummary() {
+      document.getElementById("receivedCount").textContent = reports.filter(report => report.status === "Received").length;
+      document.getElementById("reviewCount").textContent = reports.filter(report => report.status === "Under Review").length;
+      document.getElementById("resolvedCount").textContent = reports.filter(report => report.status === "Resolved").length;
+    }
+
+    recordsList.addEventListener("change", event => {
+      if (!event.target.matches(".status-select")) return;
+      const report = reports.find(item => item.id === event.target.dataset.id);
+      if (report) {
+        report.status = event.target.value;
+        renderReports();
+      }
+    });
 
     form.addEventListener("submit", event => {
       event.preventDefault();
