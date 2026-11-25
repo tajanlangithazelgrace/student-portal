@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barangay Peace &amp; Order | Blotter Tracker</title>
+</head>
+<body>
+  <header>
+    <h1>Barangay Peace &amp; Order</h1>
+    <p>Incident Blotter Tracker</p>
+  </header>
+  <main>
+    <section aria-labelledby="report-heading">
+      <h2 id="report-heading">Record an incident</h2>
+      <form id="reportForm">
+        <p><label for="reportDate">Date reported</label><br><input id="reportDate" type="date" required></p>
+        <p><label for="category">Incident category</label><br>
+          <select id="category" required>
+            <option value="">Choose a category</option>
+            <option>Noise concern</option><option>Neighborhood dispute</option>
+            <option>Property concern</option><option>Public disturbance</option>
+            <option>Safety concern</option><option>Other community concern</option>
+          </select>
+        </p>
+        <p><label for="location">General location / purok</label><br><input id="location" maxlength="80" required></p>
+        <p><label for="summary">Brief incident summary</label><br><textarea id="summary" maxlength="300" required></textarea></p>
+        <button type="submit">Save sample report</button>
+      </form>
+    </section>
+    <section aria-labelledby="records-heading">
+      <h2 id="records-heading">Blotter records</h2>
+      <div id="recordsList"><p>No reports yet.</p></div>
+    </section>
+  </main>
+</body>
+</html>
