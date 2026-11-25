@@ -46,5 +46,42 @@
       </section>
     </div>
   </main>
+  <script>
+    "use strict";
+    const reports = [];
+    const form = document.getElementById("reportForm");
+    const recordsList = document.getElementById("recordsList");
+    let nextReportNumber = 1;
+
+    function renderReports() {
+      if (reports.length === 0) {
+        recordsList.innerHTML = '<p class="muted">No reports yet. Add a fictional sample report.</p>';
+        return;
+      }
+      recordsList.innerHTML = reports.map(report => `
+        <article class="record">
+          <h3>${report.id} · ${report.category}</h3>
+          <div class="muted">${report.reportDate} · ${report.location}</div>
+          <p>${report.summary}</p>
+        </article>
+      `).join("");
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const report = {
+        id: `BPO-DEMO-${String(nextReportNumber++).padStart(3, "0")}`,
+        reportDate: document.getElementById("reportDate").value,
+        category: document.getElementById("category").value,
+        location: document.getElementById("location").value.trim(),
+        summary: document.getElementById("summary").value.trim(),
+        status: "Received"
+      };
+      reports.unshift(report);
+      form.reset();
+      renderReports();
+    });
+  </script>
 </body>
 </html>
