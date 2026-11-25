@@ -59,7 +59,13 @@
         return;
       }
       updateSummary();
-      recordsList.innerHTML = reports.map(report => `
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const selectedStatus = document.getElementById("statusFilter").value;
+      const filteredReports = reports.filter(report => {
+        const searchableText = [report.id, report.category, report.location, report.summary].join(" ").toLowerCase();
+        return searchableText.includes(query) && (selectedStatus === "all" || report.status === selectedStatus);
+      });
+      recordsList.innerHTML = filteredReports.map(report => `
         <article class="record">
           <h3>${report.id} · ${report.category}</h3>
           <div class="muted">${report.reportDate} · ${report.location}</div>
@@ -86,6 +92,9 @@
         renderReports();
       }
     });
+
+    document.getElementById("searchInput").addEventListener("input", renderReports);
+    document.getElementById("statusFilter").addEventListener("change", renderReports);
 
     form.addEventListener("submit", event => {
       event.preventDefault();
